@@ -27,19 +27,19 @@ docker image build \
   RUN --mount=type=secret,id=PASSWD \
     apt-get update && \
     apt-get install -y sudo && \
-    useradd -m -G sudo george && \
+    useradd -m -s /bin/bash -G sudo george && \
     cat /run/secrets/PASSWD | chpasswd
 EOF
 ```
 
 ### Create docker Python image
 ```
-docker image build --tag dev-python - << EOF
+docker image build --no-cache --force-rm --tag dev-python - << EOF
   FROM dev-ubuntu
-  RUN apt-get update && \
-      apt-get install -y tmux vim curl python3 python3-pip
+  RUN apt-get update && apt-get install -y tmux vim curl python3 python3-pip
   USER george
-  SHELL ["/bin/bash"]
+  ENV PATH "$PATH:/home/george/.local/bin"
+  RUN pip3 install notebook
 EOF
 ```
 
@@ -50,11 +50,18 @@ docker container run --rm -it -d \
   --network bridge-dev \
   --ip 172.20.0.100 \
   --volume "$PWD:/home/george/ws" \
+  --publish 8888:8888 \
   dev-python
 
 docker container attach --detach-keys="ctrl-x" dev-python
+docker container exec -it --user george dev-python /bin/bash
 
 docker container stop dev-python
+```
+
+### Run jupyter notebook
+```
+docker container exec -it --user george dev-python jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser
 ```
 
 ## Build and run
@@ -65,5 +72,3 @@ pip3 install -r read-ods/requirements.txt
 
 python3 read-ods/bookkeeping-hist.py secrets/bookkeeping-hist.ods
 ```
-
-
