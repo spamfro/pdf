@@ -1,12 +1,12 @@
 import argparse
 
-from pdfminer.high_level import extract_text
+from utils_json import dump_json
+from utils_electrohold_pdfminersix import index_pdf
 
 
 def main(file_path):
-  text = extract_text(file_path)
-
-  print(text)
+  # print(dump_json(index_pdf(file_path)))
+  print(index_pdf(file_path))
 
 
 if __name__ == '__main__':

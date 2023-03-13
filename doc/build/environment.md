@@ -1,8 +1,4 @@
-# Read ODS
-
-Use [Exodf](https://pythonhosted.org/ezodf/) to load ODS file with Python.
-
-## Setup environment
+# Setup environment
 
 ### Create docker network
 ```
@@ -36,7 +32,7 @@ EOF
 ```
 docker image build --no-cache --force-rm --tag dev-python - << EOF
   FROM dev-ubuntu
-  RUN apt-get update && apt-get install -y tmux vim curl python3 python3-pip
+  RUN apt-get update && apt-get install -y tmux vim curl less python3 python3-pip
   USER george
   ENV PATH "$PATH:/home/george/.local/bin"
   RUN pip3 install notebook
@@ -62,13 +58,4 @@ docker container stop dev-python
 ### Run jupyter notebook
 ```
 docker container exec -it --user george dev-python jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser
-```
-
-## Build and run
-```
-cd ~/ws
-
-pip3 install -r read-ods/requirements.txt
-
-python3 read-ods/bookkeeping-hist.py secrets/bookkeeping-hist.ods
 ```
