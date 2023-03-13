@@ -1,9 +1,32 @@
-import pdfplumber
+from functools import reduce, partial
+from pdfplumber import open
 
 
+"""
+open :: pdfplumber ~> file_path -> pdf
+
+pages :: pdf ~> [page]
+
+crop ``:: page ~> bbox -> page
+filter :: page ~> fn -> page
+objects :: page ~> { object_type -> object }
+"""
+
+pipe = lambda *fns: reduce(lambda acc, fn: lambda x: fn(acc(x)), fns)
+map_groups = lambda fn, groups: map(lambda group: (group[0], fn(group[1])), groups)
+
+page_objects = lambda page: page.objects.items()
+
+page_to_lines = pipe(
+  page_objects,
+  # pipe(partial(map_groups, len), list)
+  partial(filter, lambda it: it[0] in ['line', 'rect']),
+  list
+)
+  
 def index_pdf(file_path):
-  with pdfplumber.open(file_path) as pdf:
-    return pdf
+  with open(file_path) as pdf:
+    return page_to_lines(pdf.pages[0])
 
 
 # def index_page(page):
