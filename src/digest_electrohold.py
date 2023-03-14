@@ -1,13 +1,9 @@
 import argparse
-
-from utils_json import dump_json
-from utils_electrohold_pdfminersix import index_pdf
-
+from electrohold_pdfminersix.pdf import digest_pdf
+# from electrohold_pdfplumber.pdf import digest_pdf
 
 def main(file_path):
-  # print(dump_json(index_pdf(file_path)))
-  print(index_pdf(file_path))
-
+  print(digest_pdf(file_path))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

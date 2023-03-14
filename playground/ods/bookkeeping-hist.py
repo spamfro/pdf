@@ -1,6 +1,7 @@
 import argparse
 import ezodf
-from itertools import tee, islice
+from itertools import islice
+
 
 def main(file_path, sheet_name):
   sheet_name = sheet_name or 'hist'

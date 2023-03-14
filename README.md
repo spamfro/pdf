@@ -1,5 +1,3 @@
-# Parse ODS and PDF with Python
+# Digest PDF with Python
 
-[Setup environment](./doc/build/environment.md)  
-[Read ODS](./doc/build/ods.md)  
-[Read PDF](./doc/build/pdf.md)  
+[Setup environment](./doc/setup-environment.md)  
