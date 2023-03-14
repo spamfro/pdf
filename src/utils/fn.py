@@ -1,5 +1,6 @@
 from functools import reduce, partial
-from collections import namedtuple
+from itertools import groupby
+
 
 pipe = lambda *fns: reduce(lambda acc, fn: lambda x: fn(acc(x)), fns)
 compose = lambda *fns: pipe(*reversed(fns))
@@ -9,16 +10,14 @@ converge = lambda fn0, fns: pipe(
   lambda xs: fn0(*xs)
 )
 
-pick = lambda field, obj: obj[field]
+imap = lambda fn: partial(map, fn)
+ifilter = lambda fn: partial(filter, fn)
 
+pick = lambda field: lambda obj: obj[field]
 
 lens_view = lambda lens, store: lens.view(store)
 lens_set = lambda lens, value, store: lens.set(value, store)
 lens_over = lambda lens, fn, store: lens_set(lens, fn(lens_view(lens, store)), store)
-
-
-# map_groups = lambda fn, groups: map(lambda group: (group[0], fn(group[1])), groups)
-# map_groups = lambda fn, groups: ((key, fn(value)) for key, value in groups)
 
 class group_value_lens:
   @staticmethod
@@ -26,4 +25,9 @@ class group_value_lens:
   @staticmethod
   def set(value, group): return (group[0], value)
 
-map_groups = lambda fn, groups: map(partial(lens_over, group_value_lens, fn), groups)
+over_group_value = lambda fn: partial(lens_over, group_value_lens, fn)
+
+sort_by = lambda fn: partial(sorted, key=fn)
+group_by = lambda fn: partial(groupby, key=fn)
+
+join_str = lambda delim: delim.join
