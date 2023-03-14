@@ -4,8 +4,11 @@ from itertools import groupby
 from pdfminer.high_level import extract_pages
 from pdfminer.layout import LTTextBoxHorizontal, LTTextLineHorizontal
 from re import compile
-from utils.fn import pipe, pick, map_groups
+from utils.fn import pipe, pick, map_groups, lens_over, group_value_lens
 from utils.json import dump_json
+
+
+transform_groups = lambda fn, groups: map(partial(lens_over, group_value_lens, fn), groups) 
 
 
 def flatten_text_elements(elements):
@@ -27,18 +30,17 @@ transform_elements_to_labels = partial(map, element_to_label)
 select_significant_labels = partial(filter, lambda label: label.left > 20)
 
 group_by_label_top = pipe(partial(sorted, key=label_top), partial(groupby, key=label_top))
-sort_by_label_left = partial(map_groups, partial(sorted, key=label_left))
+sort_by_label_left = partial(transform_groups, partial(sorted, key=label_left))
 
 number_with_spaces_pattern = compile(r'[\s\d,]+')
 normalize_number = lambda text: text.replace(' ', '') if number_with_spaces_pattern.fullmatch(text) else text
 
 labels_to_text = pipe(
-  partial(map, label_text), 
-  partial(map, normalize_number),
+  partial(map, pipe(label_text, normalize_number)),
   partial(' '.join)
 )
 
-transform_labels_to_text = partial(map_groups, labels_to_text)
+transform_labels_to_text = partial(transform_groups, labels_to_text)
 
 digest_page = pipe(
   iter,
