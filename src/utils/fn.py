@@ -1,17 +1,22 @@
+"""
+ifilter :: (a -> bool) -> [a] -> [a]
+imap :: (a -> b) -> [a] -> [b]
+join_str :: str -> [str] -> str
+order_by :: (x -> k) -> x... -> [(k,x)]
+pick :: str -> obj -> a
+pipe :: (fn,...) -> fn
+sort_by :: (x -> k) -> x... -> [x]
+over_group_value :: (a -> b) -> (k,a) -> (k,b)
+"""
+
 from functools import reduce, partial
 from itertools import groupby
 
-
 pipe = lambda *fns: reduce(lambda acc, fn: lambda x: fn(acc(x)), fns)
-compose = lambda *fns: pipe(*reversed(fns))
-branch = lambda *fns: lambda x: (fn(x) for fn in fns)
-converge = lambda fn0, fns: pipe(
-  lambda x: (fn(x) for fn in fns), 
-  lambda xs: fn0(*xs)
-)
 
 imap = lambda fn: partial(map, fn)
 ifilter = lambda fn: partial(filter, fn)
+ireduce = lambda fn: partial(reduce, fn)
 
 pick = lambda field: lambda obj: obj[field]
 

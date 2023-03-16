@@ -1,10 +1,8 @@
-import argparse
-# from electrohold_pdfminersix.pdf import digest_pdf
-from electrohold_pdfplumber.pdf import digest_pdf
 from utils.json import dump_json
+from utils.pdf import digest_pdf
+import argparse
 
 def main(file_path):
-  # print(digest_pdf(file_path))
   print(dump_json(digest_pdf(file_path)))
 
 if __name__ == '__main__':
