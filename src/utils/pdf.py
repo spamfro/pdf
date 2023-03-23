@@ -8,9 +8,11 @@ from pdfplumber import open
 from pdfplumber.page import Page
 from pdfplumber.pdf import PDF
 from re import compile
-from utils.fn import group_value_lens, pipe, group_by, imap, ireduce, join_str, over_group_value, sort_by
+from utils.fn import group_value_lens, pipe, group_by, ifilter, imap, ireduce, join_str, over_group_value, sort_by
+from utils.ranges import number_in_number_ranges
 
-extract_words = partial(Page.extract_words, keep_blank_chars=True, y_tolerance=0)
+
+extract_words = partial(Page.extract_words, keep_blank_chars=True, y_tolerance=0, x_tolerance=1)
 
 word_line_top = lambda word: int(word['top'])
 word_pos_left = lambda word: int(word['x0'])
@@ -37,6 +39,15 @@ digest_page = pipe(
 
 digest_pdf_pages = pipe(imap(digest_page), ireduce(add), list)
 
-def digest_pdf(file_path):
+page_number = lambda page: page.page_number
+is_page_in_pages_ranges = lambda pages_ranges: (
+  pipe(page_number, partial(number_in_number_ranges, pages_ranges)) if pages_ranges
+  else lambda _: True
+)
+digest_pdf_pages_ranges = lambda pages_ranges: (
+  pipe(ifilter(is_page_in_pages_ranges(pages_ranges)), digest_pdf_pages)
+)
+
+def digest_pdf(file_path, pages_ranges):
   with open(file_path) as pdf:
-    return digest_pdf_pages(pdf.pages)
+    return digest_pdf_pages_ranges(pages_ranges)(pdf.pages)

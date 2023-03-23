@@ -4,8 +4,8 @@
 ```
 pip3 install -r requirements.txt
 PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/electrohold.pdf
-PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/toplofikaciya.pdf
-PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/sofiyskavoda.pdf
+PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/toplofikaciya.pdf --pages 1,2
+PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/sofiyskavoda.pdf --pages 1-2
 ```
 
 ## Setup Python environment with Docker
@@ -42,10 +42,10 @@ EOF
 ```
 docker image build --no-cache --force-rm --tag dev-python - << EOF
   FROM dev-ubuntu
-  RUN apt-get update && apt-get install -y tmux vim curl less python3 python3-pip
+  RUN apt-get update && apt-get install -y tmux vim curl less python3 python3-pip libmagickwand-dev
   USER george
   ENV PATH "$PATH:/home/george/.local/bin"
-  RUN pip3 install notebook
+  RUN pip3 install notebook Wand
 EOF
 ```
 
@@ -55,7 +55,7 @@ docker container run --rm -it -d \
   --name dev-python \
   --network bridge-dev \
   --ip 172.20.0.100 \
-  --volume "$PWD:/home/george/ws" \
+  --volume "$PWD:$PWD" \
   --publish 8888:8888 \
   dev-python
 
@@ -68,4 +68,10 @@ docker container stop dev-python
 ### Run jupyter notebook
 ```
 docker container exec -it --user george dev-python jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser
+```
+
+### Update Wand policy to read PDF
+```
+vim /etc/ImageMagick-6/policy.xml
+  <policy domain="coder" rights="read" pattern="PDF" />
 ```
