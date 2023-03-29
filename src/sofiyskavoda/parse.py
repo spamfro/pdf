@@ -1,13 +1,10 @@
-from utils.fn import branch, iflatten, pipe
+from utils.fn import pipe
 from utils.parse import (
   date_from_match,
   float_number_from_match,
-  init_data,
   number_from_match, 
-  once,
-  parse_field,
   parse_regex, 
-  valid_data
+  trivial_parser,
 )
 
 
@@ -41,95 +38,56 @@ parse_detail_new_date = pipe(parse_regex(r'\d+ ___ [\d\.]+ ___ \d+/\d+/\d+ ___ .
 parse_details_complete = pipe(parse_regex(r'ОБЩО ЗА АДРЕС НА КОНСУМАЦИЯ ___ [\d\.]+ m3'), lambda match: True if match else None)
 
 
-class detail_parser():
+class meter_details_parser(trivial_parser):
   def __init__(self):
-    self.data = init_data(['meter_id', 'old_value', 'old_date', 'new_value', 'new_date'])
-    self.parse_detail = pipe(
-      branch(
-        parse_field('meter_id', parse_detail_meter_id),
-        parse_field('old_value', parse_detail_old_value),
-        parse_field('old_date', parse_detail_old_date),
-        parse_field('new_value', parse_detail_new_value),
-        parse_field('new_date', parse_detail_new_date),
-      ),
-      iflatten
-    )
-    
-  def parse_line(self, line):
-    self.data.update(self.parse_detail(line))
-    return valid_data(self.data)
+    super().__init__({
+      'meter_id': parse_detail_meter_id,
+      'new_date': parse_detail_new_date,
+      'new_value': parse_detail_new_value,
+      'old_date': parse_detail_old_date,
+      'old_value': parse_detail_old_value,
+    })
 
 
 class details_parser():
   def __init__(self):
     self.data = []
-    self.parse_detail = detail_parser().parse_line
+    self.parse_data = meter_details_parser().parse_line
     
   def parse_line(self, line):
-    if (detail := self.parse_detail(line)):
-      self.data.append(detail)
-      self.parse_detail = details_parser().parse_line
+    if (data := self.parse_data(line)):
+      self.data.append(data)
+      self.parse_data = meter_details_parser().parse_line
     return self.data if parse_details_complete(line) else None
 
 
-class digest_parser():
+class digest_parser(trivial_parser):
   def __init__(self):
-    self.data = init_data([
-      'kin',
-      'invoice',
-      'invoice_date',
-      'due_date',
-      'period_start_date',
-      'period_end_date',
-      'next_report_date',
-      'supply_price',
-      'supply_quantity',
-      'supply_due',
-      'drain_price',
-      'drain_quantity',
-      'drain_due',
-      'filter_price',
-      'filter_quantity',
-      'filter_due',
-      'due',
-      'tax_rate',
-      'tax_due',
-      'past_due',
-      'total_due',
-      'account',
-      'details'
-    ])
-    self.parse_digest = pipe(
-      branch(
-        once(parse_field('kin', parse_kin)),
-        once(parse_field('invoice', parse_invoice)),
-        once(parse_field('invoice_date', parse_invoice_date)),
-        once(parse_field('due_date', parse_due_date)),
-        once(parse_field('period_start_date', parse_period_start_date)),
-        once(parse_field('period_end_date', parse_period_end_date)),
-        once(parse_field('next_report_date', parse_next_report_date)),
-        once(parse_field('supply_price', parse_supply_price)),
-        once(parse_field('supply_quantity', parse_supply_quantity)),
-        once(parse_field('supply_due', parse_supply_due)),
-        once(parse_field('drain_price', parse_drain_price)),
-        once(parse_field('drain_quantity', parse_drain_quantity)),
-        once(parse_field('drain_due', parse_drain_due)),
-        once(parse_field('filter_price', parse_filter_price)),
-        once(parse_field('filter_quantity', parse_filter_quantity)),
-        once(parse_field('filter_due', parse_filter_due)),
-        once(parse_field('due', parse_due)),
-        once(parse_field('tax_rate', parse_tax_rate)),
-        once(parse_field('tax_due', parse_tax_due)),
-        once(parse_field('past_due', parse_past_due)),
-        once(parse_field('total_due', parse_total_due)),
-        once(parse_field('account', parse_account)),
-        once(parse_field('details', details_parser().parse_line))
-      ),
-      iflatten
-    )
-  def parse_line(self, line):
-    self.data.update(self.parse_digest(line))
-    return valid_data(self.data)
+    super().__init__({
+      'kin': parse_kin,
+      'invoice': parse_invoice,
+      'invoice_date': parse_invoice_date,
+      'due_date': parse_due_date,
+      'period_start_date': parse_period_start_date,
+      'period_end_date': parse_period_end_date,
+      'next_report_date': parse_next_report_date,
+      'supply_price': parse_supply_price,
+      'supply_quantity': parse_supply_quantity,
+      'supply_due': parse_supply_due,
+      'drain_price': parse_drain_price,
+      'drain_quantity': parse_drain_quantity,
+      'drain_due': parse_drain_due,
+      'filter_price': parse_filter_price,
+      'filter_quantity': parse_filter_quantity,
+      'filter_due': parse_filter_due,
+      'due': parse_due,
+      'tax_rate': parse_tax_rate,
+      'tax_due': parse_tax_due,
+      'past_due': parse_past_due,
+      'total_due': parse_total_due,
+      'account': parse_account,
+      'details': details_parser().parse_line,
+    })
 
 
 def parse_digest(digest):

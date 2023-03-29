@@ -1,5 +1,11 @@
 # Digest PDF with Python
 
+## Acquire data
+
+### Sofiyska voda
+
+Subscribe to invoice emails or download invoice PDFs from https://www.sofiyskavoda.bg
+
 ## Run
 
 ### Install dependencies
