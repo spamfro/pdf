@@ -1,11 +1,27 @@
 # Digest PDF with Python
 
-## Run 
+## Acquire data
+
+### Sofiyska voda
+
+Subscribe to invoice emails or download invoice PDFs from https://www.sofiyskavoda.bg
+
+## Run
+
+### Install dependencies
 ```
 pip3 install -r requirements.txt
+```
+### Digest pdf
+```
 PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/electrohold.pdf
 PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/toplofikaciya.pdf --pages 1,2
 PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/sofiyskavoda.pdf --pages 1-2
+```
+### Parse pdf
+```
+PYTHONPATH+=./src python3 ./src/parse_sofiyskavoda_pdf.py ./data/__confidential/sofiyskavoda.pdf
+find ./data/__confidential/sofiyskavoda -name '*.pdf' | xargs -I% bash -c 'PYTHONPATH+=./src python3 ./src/parse_sofiyskavoda_pdf.py % > %.json'
 ```
 
 ## Setup Python environment with Docker
@@ -22,7 +38,7 @@ docker network create \
 ### Create docker dev image
 ```
 DOCKER_BUILDKIT=1 \
-PASSWD=$(read -s -p 'Password:' PASSWD ; echo "george:$PASSWD") \
+PASSWD=$(read -s -p 'Password:' PASSWD ; echo "$USER:$PASSWD") \
 docker image build \
   --no-cache \
   --secret id=PASSWD \
@@ -33,7 +49,7 @@ docker image build \
   RUN --mount=type=secret,id=PASSWD \
     apt-get update && \
     apt-get install -y sudo && \
-    useradd -m -s /bin/bash -G sudo george && \
+    useradd -m -s /bin/bash -G sudo $USER && \
     cat /run/secrets/PASSWD | chpasswd
 EOF
 ```
@@ -43,8 +59,8 @@ EOF
 docker image build --no-cache --force-rm --tag dev-python - << EOF
   FROM dev-ubuntu
   RUN apt-get update && apt-get install -y tmux vim curl less python3 python3-pip libmagickwand-dev
-  USER george
-  ENV PATH "$PATH:/home/george/.local/bin"
+  USER $USER
+  ENV PATH "\$PATH:/home/$USER/.local/bin"
   RUN pip3 install notebook Wand
 EOF
 ```
@@ -60,14 +76,14 @@ docker container run --rm -it -d \
   dev-python
 
 docker container attach --detach-keys="ctrl-x" dev-python
-docker container exec -it --user george dev-python /bin/bash
+docker container exec -it --user $USER dev-python /bin/bash
 
 docker container stop dev-python
 ```
 
 ### Run jupyter notebook
 ```
-docker container exec -it --user george dev-python jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser
+docker container exec -it --user $USER dev-python jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser
 ```
 
 ### Update Wand policy to read PDF

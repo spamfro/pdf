@@ -1,15 +1,15 @@
 """
-digest_pdf :: file_path -> [str]
+digest :: [str]
+digest_pdf :: file_path -> digest
 """
 
-from functools import partial
+from functools import partial, reduce
 from operator import add
 from pdfplumber import open as open_pdf
 from pdfplumber.page import Page
 from re import compile
-from utils.fn import ifilter, group_by, group_value_lens, imap, ireduce, join_str, pick, pipe, sort_by, strip_str
+from utils.fn import ifilter, group_by, group_value_lens, imap, join_str, pick, pipe, sort_by, strip_str
 from utils.ranges import number_in_number_ranges
-
 
 mul = lambda x: lambda y: x * y
 pts_to_mm = mul(1/72 * 2.54 * 10)
@@ -56,7 +56,7 @@ digest_page = pipe(
   list
 )
 
-digest_pdf_pages = pipe(imap(digest_page), ireduce(add))
+digest_pdf_pages = pipe(imap(digest_page), partial(reduce, add))
 
 page_number = lambda page: page.page_number
 is_page_in_pages_ranges = lambda pages_ranges: (
@@ -67,6 +67,6 @@ digest_pdf_pages_ranges = lambda pages_ranges: (
   pipe(ifilter(is_page_in_pages_ranges(pages_ranges)), digest_pdf_pages)
 )
 
-def digest_pdf(file_path, pages_ranges):
+def digest_pdf(file_path, pages_ranges=None):
   with open_pdf(file_path) as pdf:
     return digest_pdf_pages_ranges(pages_ranges)(pdf.pages)

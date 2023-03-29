@@ -1,16 +1,31 @@
 """
-ifilter :: (a -> bool) -> [a] -> [a]
-imap :: (a -> b) -> [a] -> [b]
-join_str :: str -> [str] -> str
-order_by :: (x -> k) -> x... -> [(k,x)]
-pick :: str -> obj -> a
-pipe :: (fn,...) -> fn
-sort_by :: (x -> k) -> x... -> [x]
-over_group_value :: (a -> b) -> (k,a) -> (k,b)
+branch :: (fn, ...) -> fn
+compose :: (fn, ...) -> fn
+converge :: (fn, [fn]) -> fn
+group_by :: (x -> k) -> [x] -> [[k, x]]
+group_value_lens :: lens [k, x]
+identity :: x -> x
+ifilter :: (x -> bool) -> [x] -> [x]
+iflatten :: [[x], ...] -> [x, ...]
+imap :: (x -> y) -> [x] -> [y]
+ipick :: (k, ...) -> { k -> x } -> (x, ...)
+ipicks :: ('a.b.c', ...) -> { 'a' -> { 'b' -> { 'c' -> x }}, ...} -> (x, ...)
+izip :: ([x], ...) -> [y] -> [(x, ..., y)]
+join_str :: d -> [x] -> 'x' + d + ...
+lens store :: { view :: store -> view, set :: (x, store) -> store }
+lens_over :: (lens, fn, store) -> store
+lens_set :: (lens, value, store) -> store
+lens_view :: (lens, store) -> view
+over_group_value :: (x -> y) -> [k, x] -> [k, y]
+pick :: k -> { k -> x } -> x
+picks :: 'a.b.c' -> { 'a' -> { 'b' -> { 'c' -> x }}} -> x
+pipe :: (fn, ...) -> fn
+sort_by :: (x -> k) -> [x] -> [x]
+strip_str :: ds -> x -> x
 """
 
 from functools import reduce, partial
-from itertools import groupby
+from itertools import groupby, chain
 
 pipe = lambda *fns: reduce(lambda acc, fn: lambda x: fn(acc(x)), fns)
 compose = lambda *fns: pipe(*reversed(fns))
@@ -22,14 +37,16 @@ converge = lambda fn0, fns: pipe(
 
 imap = lambda fn: partial(map, fn)
 ifilter = lambda fn: partial(filter, fn)
-ireduce = lambda fn: partial(reduce, fn)
 izip = lambda *xss: partial(zip, *xss)
+iflatten = chain.from_iterable
 
-id = lambda x: x
+identity = lambda x: x
 
 pick = lambda k: lambda x: x[k]
-picks = lambda *ks: reduce(lambda fn, k: lambda x: fn(x)[k], ks, id) 
-ipick = lambda *xs: branch(*(picks(*x.split('.')) for x in xs))
+ipick = lambda *ks: lambda x: (x[k] for k in ks)
+picks = lambda ks: reduce(lambda fn, k: lambda x: fn(x)[k], ks.split('.'), identity) 
+ipicks = lambda *kss: branch(*(picks(ks) for ks in kss))
+# example: pipe(ipicks('a.b','d'), izip(['x','y']), dict)({'a': {'b':2, 'c': 3 }, 'd': 4 })
 
 lens_view = lambda lens, store: lens.view(store)
 lens_set = lambda lens, value, store: lens.set(value, store)
