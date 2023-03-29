@@ -14,9 +14,9 @@ class IterEncoder(json.JSONEncoder):
     else:
       return list(iterable)
 
-    if isinstance(o, datetime.datetime):
+    if isinstance(o, datetime.datetime) or isinstance(o, datetime.date):
       return str(o)
-        
+
     return json.JSONEncoder.default(self, o)
 
 def dump_json(o):
