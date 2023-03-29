@@ -7,8 +7,7 @@ from utils.parse import (
   once,
   parse_field,
   parse_regex, 
-  valid_data,
-  valid_or_error_data,
+  valid_data
 )
 
 
@@ -138,5 +137,5 @@ def parse_digest(digest):
   for line in digest:
     if parser.parse_line(line) is not None:
       break
-  return valid_or_error_data(parser.data)
+  return parser.data
   

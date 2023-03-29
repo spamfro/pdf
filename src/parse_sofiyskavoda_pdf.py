@@ -1,15 +1,14 @@
-"""
-PYTHONPATH+=./src python3 ./src/parse_sofiyskavoda_pdf.py ./data/__confidential/sofiyskavoda.pdf
-find ./data/__confidential/sofiyskavoda -name '*.pdf' | PYTHONPATH+=./src xargs -L1 python3 ./src/parse_sofiyskavoda_pdf.py | grep error
-"""
-
 from sofiyskavoda.parse import parse_digest
+from sys import stderr
 from utils.json import dump_json
+from utils.parse import valid_or_error_data
 from utils.pdf import digest_pdf
 import argparse
 
 def main(file_path):
-  print(dump_json(parse_digest(digest_pdf(file_path))))
+  data = valid_or_error_data(parse_digest(digest_pdf(file_path)))
+  if 'error' in data: print(dump_json((file_path, data)), file=stderr)
+  else: print(dump_json(data))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
