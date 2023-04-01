@@ -8,11 +8,11 @@ from operator import add
 from pdfplumber import open as open_pdf
 from pdfplumber.page import Page
 from re import compile
-from utils.fn import ifilter, group_by, group_value_lens, imap, join_str, pick, pipe, sort_by, strip_str
+from utils.fn import branch, ifilter, group_by, group_value_lens, imap, ipick, join_str, pick, pipe, sort_by, strip_str
 from utils.ranges import number_in_number_ranges
 
 mul = lambda x: lambda y: x * y
-pts_to_mm = mul(1/72 * 2.54 * 10)
+pts_to_mm = pipe(mul(1/72 * 2.54 * 10), round)
 
 number_with_spaces_pattern = compile(r'[\s\d,]+')
 normalize_number = lambda text: text.replace(' ', '') if number_with_spaces_pattern.fullmatch(text) else text
@@ -26,33 +26,47 @@ word_right = word_dimention('x1')
 word_top_left = lambda word: (word_top(word), word_left(word))
 word_text = pipe(pick('text'), strip_str(), normalize_number)
 
-sort_words_by_word_top_left = sort_by(word_top_left)
-group_words_in_lines_by_word_top = pipe(group_by(word_top), imap(group_value_lens.view))
+word_to_label = pipe(branch(word_top, word_left, word_right, word_text), tuple)
+label_top = pick(0)
+label_left = pick(1)
+label_right = pick(2)
+label_top_left = pipe(ipick(0, 1), tuple)
+label_text = pick(3)
+label_text_is_not_empty = lambda label: len(label_text(label)) > 0
 
-def group_words_next_to_each_other(words, distance=1):
+extract_page_labels = pipe(
+  extract_page_words,
+  imap(word_to_label),
+  ifilter(label_text_is_not_empty)
+)
+
+sort_labels_by_top_left = sort_by(label_top_left)
+group_labels_in_lines_by_top = pipe(group_by(label_top), imap(group_value_lens.view))
+
+def group_labels_next_to_each_other(labels, distance=1):
   rs = []
-  prev_word = None
-  for word in words:
-    if prev_word is None or word_left(word) - word_right(prev_word) > distance:
-      rs.append([word])
+  prev_label = None
+  for label in labels:
+    if prev_label is None or label_left(label) - label_right(prev_label) > distance:
+      rs.append([label])
     else:
-      rs[-1].append(word)
-    prev_word = word
+      rs[-1].append(label)
+    prev_label = label
   return rs
 
-collate_words_text = pipe(imap(word_text), join_str(' '))
-line_words_to_text = pipe(
-  group_words_next_to_each_other,
-  imap(collate_words_text), 
+collate_labels_text = pipe(imap(label_text), join_str(' '))
+line_labels_to_text = pipe(
+  group_labels_next_to_each_other,
+  imap(collate_labels_text), 
   join_str(' ___ ')
 )
-transform_lines_words_to_text = imap(line_words_to_text)
+transform_lines_labels_to_text = imap(line_labels_to_text)
 
 digest_page = pipe(
-  extract_page_words,
-  sort_words_by_word_top_left,
-  group_words_in_lines_by_word_top,
-  transform_lines_words_to_text,
+  extract_page_labels,
+  sort_labels_by_top_left,
+  group_labels_in_lines_by_top,
+  transform_lines_labels_to_text,
   list
 )
 
