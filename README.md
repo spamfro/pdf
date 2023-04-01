@@ -1,27 +1,32 @@
 # Digest PDF with Python
 
-## Acquire data
-
-### Sofiyska voda
-
-Subscribe to invoice emails or download invoice PDFs from https://www.sofiyskavoda.bg
-
-## Run
-
-### Install dependencies
+## Install dependencies
 ```
 pip3 install -r requirements.txt
 ```
-### Digest pdf
+
+## Sofiyska voda
+
+### Acquire data
+
+Subscribe to invoice emails or download invoice PDFs from https://www.sofiyskavoda.bg
+
+### Process invoices
 ```
-PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/electrohold.pdf
-PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/toplofikaciya.pdf --pages 1,2
-PYTHONPATH+=./src python3 src/digest_pdf.py data/__confidential/sofiyskavoda.pdf --pages 1-2
+find ./data/__confidential/sofiyskavoda -name '*.pdf' | xargs -I% bash -c 'PYTHONPATH+=./src python3 ./src/digest_pdf.py % > %-digest.json'
+find ./data/__confidential/sofiyskavoda -name '*.pdf' | xargs -I% bash -c 'PYTHONPATH+=./src python3 ./src/parse_sofiyskavoda_pdf.py % > %-invoice.json'
 ```
-### Parse pdf
+
+## Toplofikaciya
+
+### Acquire data
+
+Subscribe and download invoices from https://www.e-invoice.bg
+
+### Process invoices
 ```
-PYTHONPATH+=./src python3 ./src/parse_sofiyskavoda_pdf.py ./data/__confidential/sofiyskavoda.pdf
-find ./data/__confidential/sofiyskavoda -name '*.pdf' | xargs -I% bash -c 'PYTHONPATH+=./src python3 ./src/parse_sofiyskavoda_pdf.py % > %.json'
+find ./data/__confidential/toplofikaciya -name '*.pdf' | xargs -I% bash -c 'PYTHONPATH+=./src python3 ./src/digest_pdf.py % > %-digest.json'
+find ./data/__confidential/toplofikaciya -name '*.pdf' | xargs -I% bash -c 'PYTHONPATH+=./src python3 ./src/parse_toplofikaciya_pdf.py % > %-invoice.json'
 ```
 
 ## Setup Python environment with Docker

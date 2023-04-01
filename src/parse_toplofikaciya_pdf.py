@@ -1,6 +1,7 @@
 from parse_pdf import parse_and_validate_digest_table
-from sofiyskavoda.parse import parse_digest as parse_digest_full
 from sys import stderr
+from toplofikaciya.parse_full import parse_digest as parse_digest_full
+from toplofikaciya.parse_short import parse_digest as parse_digest_short
 from utils.fn import pipe
 from utils.json import dump_json
 from utils.parse import validate_data
@@ -11,6 +12,7 @@ import argparse
 def parse_and_validate_digest(digest):
   table = { 
     'full': pipe(parse_digest_full, validate_data),
+    'short': pipe(parse_digest_short, validate_data),
   }
   return parse_and_validate_digest_table(table, digest)
 
