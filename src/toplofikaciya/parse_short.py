@@ -1,5 +1,3 @@
-from utils.parse import trivial_parser
-
 from toplofikaciya.parse import (
   parse_due_date,
   parse_heating_accounting_due,
@@ -10,6 +8,8 @@ from toplofikaciya.parse import (
   parse_period_start_date,
   parse_total_due,
 )
+from utils.parse import trivial_parser
+
 
 class digest_parser(trivial_parser):
   def __init__(self):

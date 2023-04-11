@@ -21,13 +21,26 @@ find ./data/__confidential/sofiyskavoda -name '*.pdf' | xargs -I% bash -c 'PYTHO
 
 ### Acquire data
 
-Subscribe and download invoices from https://www.e-invoice.bg
+Subscribe to and download invoices from https://www.e-invoice.bg
 
 ### Process invoices
 ```
 find ./data/__confidential/toplofikaciya -name '*.pdf' | xargs -I% bash -c 'PYTHONPATH+=./src python3 ./src/digest_pdf.py % > %-digest.json'
 find ./data/__confidential/toplofikaciya -name '*.pdf' | xargs -I% bash -c 'PYTHONPATH+=./src python3 ./src/parse_toplofikaciya_pdf.py % > %-invoice.json'
 ```
+
+## Electrohold
+
+### Acquire data
+
+Subscribe to and download invoices from https://info.electrohold.bg/webint/vok/index.php
+
+### Process invoices
+```
+find ./data/__confidential/electrohold -name '*.pdf' | xargs -I% bash -c 'PYTHONPATH+=./src python3 ./src/digest_pdf.py % > %-digest.json'
+find ./data/__confidential/electrohold -name '*.pdf' | xargs -I% bash -c 'PYTHONPATH+=./src python3 ./src/parse_electrohold_pdf.py % > %-invoice.json'
+```
+
 
 ## Setup Python environment with Docker
 
@@ -72,16 +85,18 @@ EOF
 
 ### Run Python container
 ```
-docker container run --rm -it -d \
+docker container run -it \
   --name dev-python \
   --network bridge-dev \
   --ip 172.20.0.100 \
   --volume "$PWD:$PWD" \
   --publish 8888:8888 \
-  dev-python
+  --rm -d dev-python
 
 docker container attach --detach-keys="ctrl-x" dev-python
 docker container exec -it --user $USER dev-python /bin/bash
+
+docker container start -i dev-python
 
 docker container stop dev-python
 ```

@@ -1,14 +1,25 @@
-from sofiyskavoda.parse import parse_digest
+from parse_pdf import parse_and_validate_digest_table
+from sofiyskavoda.parse import parse_digest as parse_digest_full
 from sys import stderr
+from utils.fn import pipe
 from utils.json import dump_json
-from utils.parse import valid_or_error_data
+from utils.parse import validate_data
 from utils.pdf import digest_pdf
 import argparse
 
+
+def parse_and_validate_digest(digest):
+  table = { 
+    'full': pipe(parse_digest_full, validate_data),
+  }
+  return parse_and_validate_digest_table(table, digest)
+
+
 def main(file_path):
-  data = valid_or_error_data(parse_digest(digest_pdf(file_path)))
-  if 'error' in data: print(dump_json((file_path, data)), file=stderr)
+  errors, data = parse_and_validate_digest(digest_pdf(file_path))
+  if errors: print(dump_json((file_path, errors)), file=stderr)
   else: print(dump_json(data))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
