@@ -92,22 +92,11 @@ docker container run -it \
   --volume "$PWD:$PWD" \
   --publish 8888:8888 \
   --rm -d dev-python
-
-docker container attach --detach-keys="ctrl-x" dev-python
-docker container exec -it --user $USER dev-python /bin/bash
-
-docker container start -i dev-python
-
-docker container stop dev-python
 ```
 
-### Run jupyter notebook
+### Start jupyter notebook (optional)
 ```
-docker container exec -it --user $USER dev-python jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser
-```
-
-### Update Wand policy to read PDF
-```
-vim /etc/ImageMagick-6/policy.xml
-  <policy domain="coder" rights="read" pattern="PDF" />
+docker container exec -it \
+  --user $USER \
+  dev-python jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser
 ```
